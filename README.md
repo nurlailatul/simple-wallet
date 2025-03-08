@@ -57,9 +57,7 @@ Maintainer : @nurlailatul
 Run `make <command>` to build/test/run locally. Refer to the `Makefile` for available commands.
 
 ```
-make test       # run tests (excluding E2E)
-make e2e-test   # run end-to-end tests
-make repo-test  # run unit tests for repo layer
-make migrate    # run DB migrations
-make run        # run the service at local machine on port 8081
+make test           # run tests
+make migrate-down   # rollback DB migrations
+make vet            # run go vet
 ```

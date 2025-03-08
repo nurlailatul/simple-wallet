@@ -1,4 +1,4 @@
-.PHONY: run build clean test fmt vet
+.PHONY: run build test fmt vet
 
 # Variables
 APP_NAME=domper #dompet-paper
