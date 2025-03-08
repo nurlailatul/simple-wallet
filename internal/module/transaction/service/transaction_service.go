@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"simple-wallet/internal/infrastructure/database"
 	balanceHistoryDomain "simple-wallet/internal/module/balance_history/domain"
 	balanceHistoryRepository "simple-wallet/internal/module/balance_history/repository"
@@ -13,6 +14,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 )
+
+var logFormat = "[TransactionService][%v][UserID:%v]"
 
 type TransactionService struct {
 	balanceHistoryRepo balanceHistoryRepository.BalanceHistoryRepositoryInterface
@@ -40,7 +43,8 @@ func (s *TransactionService) GetByReferenceID(ctx context.Context, referenceID s
 }
 
 func (s *TransactionService) DeductBalance(ctx context.Context, request domain.DeductBalanceRequest) error {
-	log.SetFormatter(&log.JSONFormatter{})
+	// log.SetFormatter(&log.JSONFormatter{})
+	logf := fmt.Sprintf(logFormat, "DeductBalance", request.UserID)
 	message := ""
 
 	// Start a transaction
@@ -70,7 +74,7 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 		s.connection.RollbackTx(tx)
 
 		message = "error deduct wallet balance"
-		log.Errorf("[DeductBalance] %v: %v", message, err)
+		log.Errorf("%v %v: %v", logf, message, err.Error())
 		return errors.New(message)
 	}
 
@@ -89,7 +93,7 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 		s.connection.RollbackTx(tx)
 
 		message = "error create deduct transaction"
-		log.Errorf("[DeductBalance] %v: %v", message, err)
+		log.Errorf("%v %v: %v", logf, message, err.Error())
 		return errors.New(message)
 	}
 
@@ -103,15 +107,20 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 		FinalAmount:     finalAmount,
 	}
 
+	s.connection.RollbackTx(tx)
+
 	if err = s.balanceHistoryRepo.Create(tx, history); err != nil {
 		s.connection.RollbackTx(tx)
 
 		message = "error create balance history"
-		log.Errorf("[DeductBalance] %v: %v", message, err)
+		log.Errorf("%v %v: %v", logf, message, err.Error())
 		return errors.New(message)
 	}
 
 	s.connection.CommitTx(tx)
+
+	message = "Success deduct balance"
+	log.Infof("%v %v: %v", logf, message, "")
 
 	return nil
 }

@@ -74,6 +74,7 @@ func (h *HTTPHandler) createDisbursement(c *gin.Context) {
 	}
 
 	req := transactionDomain.DeductBalanceRequest{
+		UserID:                userID,
 		WalletID:              wallet.ID,
 		Amount:                request.Amount,
 		ReceiverBank:          request.ReceiverBank,
