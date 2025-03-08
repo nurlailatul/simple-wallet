@@ -17,16 +17,10 @@ func NewUserRepository(dbGorm *db.GormDBWrapper) UserRepositoryInterface {
 	}
 }
 
-var selectQuery = `*,  CASE 
-		WHEN no_hp_verified = 1 THEN 3
-		WHEN status = 10 THEN 2
-		ELSE 1
-	END AS status`
-
-func (repo *UserRepository) GetById(ctx context.Context, userId int64) *domain.User {
+func (repo *UserRepository) GetById(ctx context.Context, userId int64) *domain.UserEntity {
 	dbgorm := repo.gorm
 
-	var entity domain.User
+	var entity domain.UserEntity
 	if err := dbgorm.Table("user").WithContext(ctx).Where("id = ?", userId).First(&entity).Error; err != nil {
 		return nil
 	}
