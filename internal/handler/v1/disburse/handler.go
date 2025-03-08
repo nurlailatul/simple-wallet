@@ -38,7 +38,7 @@ func NewDisburseHandler(
 //	@Tags			v1
 //	@Accept			json
 //	@Produce		json
-//	@Param			X-API-KEY	header		string					true	"Insert your api key"	default(<wallet-api-key>)
+//	@Param			x-api-key	header		string					true	"Insert your api key"	default(<wallet-api-key>)
 //	@Param			user_id		path		int						true	"User ID"
 //	@Param			data		body		CreateDisburseRequest	true	"Create deduct balance transaction request data"
 //	@Success		200			{object}	CreateDisburseResponse

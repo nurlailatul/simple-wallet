@@ -1,0 +1,28 @@
+app:
+  name: "Simple Wallet"
+  env: "local"
+  apiKey: "app-api-key"
+
+server:
+  port: "8081"
+
+database:
+  main:
+    driver: "mysql"
+    name: ""
+    host: "localhost"
+    port: "3306"
+    user: ""
+    password: ""
+    maxopen: 50
+    maxidle: 10
+    maxlifetime: 3
+
+swagger:
+  description: "This is a Wallet Service server."
+  title: "Wallet Service"
+  version: "1.0.0"
+  host: "localhost:8081"
+  schemes:
+  - "http"
+  apiKey: "swagger-api-key"

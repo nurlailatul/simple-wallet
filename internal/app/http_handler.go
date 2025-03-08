@@ -13,7 +13,7 @@ import (
 )
 
 func (a *AppService) SetupHttpRouteHandler(cfg *config.Configuration) server.Route {
-	v1Routes := a.setupV1Handler()
+	v1Routes := a.setupV1Handler(a.ApiV1AuthMiddleware)
 	otherRoutes := a.setupOtherHandler(a.SwaggerAuthMiddleware)
 
 	return server.Route{
@@ -22,14 +22,14 @@ func (a *AppService) SetupHttpRouteHandler(cfg *config.Configuration) server.Rou
 	}
 }
 
-func (a *AppService) setupV1Handler() []server.RouteHandler {
+func (a *AppService) setupV1Handler(auth *middleware.AuthMiddleware) []server.RouteHandler {
 	routes := make([]server.RouteHandler, 0)
-	routes = append(routes, disburseHandler.NewDisburseHandler(a.TransactionService, a.UserService, a.WalletService).RegisterRoute()...)
+	routes = append(routes, disburseHandler.NewDisburseHandler(a.TransactionService, a.UserService, a.WalletService).RegisterRoute(auth)...)
 
 	return routes
 }
 
-func (a *AppService) setupOtherHandler(auth *middleware.SwaggerAuthMiddleware) []server.RouteHandler {
+func (a *AppService) setupOtherHandler(auth *middleware.AuthMiddleware) []server.RouteHandler {
 	pingHandler := server.RouteHandler{
 		Method: http.MethodGet,
 		Path:   "/ping",

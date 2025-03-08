@@ -15,7 +15,8 @@ import (
 )
 
 type AppService struct {
-	SwaggerAuthMiddleware *middleware.SwaggerAuthMiddleware
+	SwaggerAuthMiddleware *middleware.AuthMiddleware
+	ApiV1AuthMiddleware   *middleware.AuthMiddleware
 
 	UserRepo           userRepository.UserRepositoryInterface
 	UserService        userService.UserServiceInterface
@@ -29,7 +30,8 @@ type AppService struct {
 func (a *Application) SetupDependencies(ctx context.Context, cfg *config.Configuration) *AppService {
 	gormWrapper := a.Infrastructure.DB().GormDb()
 
-	swaggerAuthMiddleware := middleware.NewSwaggerAuthMiddleware(&cfg.Swagger)
+	swaggerAuthMiddleware := middleware.NewAuthMiddleware(cfg.Swagger.ApiKey)
+	apiV1AuthMiddleware := middleware.NewAuthMiddleware(cfg.App.ApiKey)
 
 	userRepo := userRepository.NewUserRepository(gormWrapper)
 	transactionRepo := transactionRepository.NewTransactionRepository(gormWrapper.DB)
@@ -44,6 +46,7 @@ func (a *Application) SetupDependencies(ctx context.Context, cfg *config.Configu
 
 	return &AppService{
 		SwaggerAuthMiddleware: swaggerAuthMiddleware,
+		ApiV1AuthMiddleware:   apiV1AuthMiddleware,
 
 		UserRepo: userRepo,
 

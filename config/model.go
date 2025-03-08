@@ -12,8 +12,9 @@ type Configuration struct {
 }
 
 type AppConfiguration struct {
-	Name string `mapstructure:"name"`
-	ENV  string `mapstructure:"env"`
+	Name   string `mapstructure:"name"`
+	ENV    string `mapstructure:"env"`
+	ApiKey string `mapstructure:"apiKey" yaml:"apiKey"`
 }
 
 type ServerConfiguration struct {
