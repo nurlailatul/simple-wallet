@@ -29,5 +29,6 @@ type SwaggerConfiguration struct {
 	Title       string   `mapstructure:"title" yaml:"title"`
 	Version     string   `mapstructure:"version" yaml:"version"`
 	Schemes     []string `mapstructure:"schemes" yaml:"schemes"`
+	Host        string   `mapstructure:"host" yaml:"host"`
 	ApiKey      string   `mapstructure:"apiKey" yaml:"apiKey"`
 }

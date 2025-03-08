@@ -9,23 +9,16 @@ import (
 )
 
 const (
-	DisbursePath = "/disburse"
+	WalletPath = "/wallets"
 )
 
 func (h *HTTPHandler) RegisterRoute() []server.RouteHandler {
 	routes := []server.RouteHandler{
 		{
 			Method: http.MethodPost,
-			Path:   DisbursePath,
+			Path:   WalletPath + "/:user_id/deduct",
 			Handler: []gin.HandlerFunc{
 				h.createDisbursement,
-			},
-		},
-		{
-			Method: http.MethodGet,
-			Path:   "/ping",
-			Handler: []gin.HandlerFunc{
-				h.testHTTP,
 			},
 		},
 	}
