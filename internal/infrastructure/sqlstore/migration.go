@@ -65,7 +65,7 @@ func (m *Migrator) Migrate() error {
 	return nil
 }
 
-var migrationIds []string
+var migrationIDs []string
 var migrationLeft int
 var totalMigration = len(GetMigration())
 
@@ -84,13 +84,13 @@ func (m *Migrator) MigrateAll(ctx context.Context) (err error) {
 	}
 
 	for i := totalMigration - migrationLeft; i < totalMigration; i++ {
-		migrationId := GetMigration()[i].ID
+		migrationID := GetMigration()[i].ID
 
-		if err := m.migrator.MigrateTo(migrationId); err != nil {
-			return fmt.Errorf("%s when run %s", err.Error(), migrationId)
+		if err := m.migrator.MigrateTo(migrationID); err != nil {
+			return fmt.Errorf("%s when run %s", err.Error(), migrationID)
 		}
 
-		fmt.Println("migrated:", migrationId)
+		fmt.Println("migrated:", migrationID)
 	}
 
 	fmt.Println("\nMigrate run successfully.")
@@ -100,7 +100,7 @@ func (m *Migrator) MigrateAll(ctx context.Context) (err error) {
 
 // Rollback migration(s) that start from the last till N step backward.
 func (m *Migrator) Rollback(step int) error {
-	for _, id := range *m.getMigrationIds(step) {
+	for _, id := range *m.getMigrationIDs(step) {
 		if err := m.migrator.RollbackLast(); err != nil {
 			return fmt.Errorf("%s %s", err.Error(), id)
 		}
@@ -125,9 +125,9 @@ func (m *Migrator) Reset() error {
 }
 
 // Get migration id(s) that start from the last till N step backward.
-func (m *Migrator) getMigrationIds(step int) *[]string {
-	if len(migrationIds) > 0 {
-		return &migrationIds
+func (m *Migrator) getMigrationIDs(step int) *[]string {
+	if len(migrationIDs) > 0 {
+		return &migrationIDs
 	}
 
 	// Get all migration from database.
@@ -143,17 +143,17 @@ func (m *Migrator) getMigrationIds(step int) *[]string {
 			break
 		}
 
-		migrationId := GetMigration()[i].ID
+		migrationID := GetMigration()[i].ID
 
 		// We can only rollback migration if they are already exist in database.
 		// So we need to check if the ID exists in the database.
-		if strings.Contains(*migrationString, migrationId) {
-			migrationIds = append(migrationIds, migrationId)
+		if strings.Contains(*migrationString, migrationID) {
+			migrationIDs = append(migrationIDs, migrationID)
 			step--
 		}
 	}
 
-	return &migrationIds
+	return &migrationIDs
 }
 
 // Get all migrations in the database and join it (Separated by space).
@@ -169,17 +169,17 @@ func (m *Migrator) getStringMigration() (*string, error) {
 	}
 
 	var id string
-	var migrationIds []string
+	var migrationIDs []string
 
 	for rows.Next() {
 		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
 
-		migrationIds = append(migrationIds, id)
+		migrationIDs = append(migrationIDs, id)
 	}
 
-	migrationString := strings.Join(migrationIds, " ")
+	migrationString := strings.Join(migrationIDs, " ")
 
 	return &migrationString, nil
 }

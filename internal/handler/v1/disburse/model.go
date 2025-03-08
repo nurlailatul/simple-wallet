@@ -7,8 +7,10 @@ import (
 )
 
 type CreateDisburseRequest struct {
-	Amount      float64   `json:"amount" binding:"required,gt=0" validate:"min=1000"`
-	ReferenceID uuid.UUID `json:"reference_id" binding:"required" example:"6ba7b810-9dad-11d1-80b4-00c04fd430c8"`
+	ReceiverBank          string    `json:"receiver_bank" binding:"required"`
+	ReceiverAccountNumber string    `json:"receiver_account_number" binding:"required"`
+	Amount                float64   `json:"amount" binding:"required,gt=0" validate:"min=1000"`
+	ReferenceID           uuid.UUID `json:"reference_id" binding:"required" example:"6ba7b810-9dad-11d1-80b4-00c04fd430c8"`
 }
 
 type CreateDisburseResponse struct {

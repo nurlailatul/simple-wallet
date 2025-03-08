@@ -24,7 +24,7 @@ func (a *AppService) SetupHttpRouteHandler(cfg *config.Configuration) server.Rou
 
 func (a *AppService) setupV1Handler() []server.RouteHandler {
 	routes := make([]server.RouteHandler, 0)
-	routes = append(routes, disburseHandler.NewDisburseHandler(a.UserService).RegisterRoute()...)
+	routes = append(routes, disburseHandler.NewDisburseHandler(a.TransactionService, a.UserService, a.WalletService).RegisterRoute()...)
 
 	return routes
 }

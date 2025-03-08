@@ -44,7 +44,7 @@ func init() {
 				ID        uint      `gorm:"primaryKey"`
 				UserID    uint      `gorm:"not null;uniqueIndex"`
 				Balance   float64   `gorm:"type:decimal(20,2);default:0.00"`
-				CreatedAt time.Time `gorm:"autoCreateTime"`
+				CreatedAt time.Time `gorm:"autoCreateTime;index"`
 				UpdatedAt time.Time `gorm:"autoCreateTime"`
 			}
 
@@ -59,7 +59,6 @@ func init() {
 	migrations = append(migrations, &gormigrate.Migration{
 		ID: "20250308134539_create_index_wallets",
 		Migrate: func(tx *gorm.DB) error {
-			tx.Exec("CREATE INDEX idx_wallets_createdAt ON wallets (created_at)")
 			tx.Exec("CREATE INDEX idx_wallets_userId_createdAt ON wallets (user_id, created_at)")
 			return nil
 		},
@@ -69,15 +68,16 @@ func init() {
 		ID: "20250308134840_create_transactions",
 		Migrate: func(tx *gorm.DB) error {
 			type Transaction struct {
-				ID          uint      `gorm:"primaryKey"`
-				WalletID    uint      `gorm:"not null;index"`
-				Amount      float64   `gorm:"type:decimal(20,2);not null"`
-				Type        int8      `gorm:"type:tinyint;not null"`
-				Status      int8      `gorm:"type:tinyint;not null"`
-				ReferenceID string    `gorm:"size:100;unique;not null"`
-				CreatedAt   time.Time `gorm:"autoCreateTime"`
-				CompletedAt time.Time `gorm:"autoCreateTime"`
-				UpdateAt    time.Time `gorm:"autoCreateTime"`
+				ID                    uint       `gorm:"primaryKey"`
+				WalletID              uint       `gorm:"not null;index"`
+				Amount                float64    `gorm:"type:decimal(20,2);not null"`
+				ReceiverBank          string     `gorm:"size:100;not null"`
+				ReceiverAccountNumber string     `gorm:"size:100;not null"`
+				Status                int8       `gorm:"type:tinyint;not null"`
+				ReferenceID           string     `gorm:"size:100;unique;not null"`
+				CreatedAt             time.Time  `gorm:"autoCreateTime;index"`
+				CompletedAt           *time.Time `gorm:"autoCreateTime;index"`
+				UpdatedAt             time.Time  `gorm:"autoCreateTime"`
 			}
 
 			return tx.AutoMigrate(&Transaction{})
@@ -91,12 +91,42 @@ func init() {
 	migrations = append(migrations, &gormigrate.Migration{
 		ID: "20250308140557_create_index_transactions",
 		Migrate: func(tx *gorm.DB) error {
-			tx.Exec("CREATE INDEX idx_transactions_createdAt ON transactions (created_at)")
-			tx.Exec("CREATE INDEX idx_transactions_completedAt ON transactions (completed_at)")
-			tx.Exec("CREATE INDEX idx_transactions_walletId_type ON transactions (wallet_id, type)")
 			tx.Exec("CREATE INDEX idx_transactions_status_createdAt ON transactions (status, created_at)")
 			tx.Exec("CREATE INDEX idx_transactions_status_completedAt ON transactions (status, completed_at)")
-			tx.Exec("CREATE INDEX idx_transactions_walletId_type_status ON transactions (wallet_id, type, status)")
+			tx.Exec("CREATE INDEX idx_transactions_walletId_status ON transactions (wallet_id, status)")
+			tx.Exec("CREATE INDEX idx_transactions_receiver_bank_receiver_account_number ON transactions (receiver_bank, receiver_account_number)")
+			return nil
+		},
+	})
+
+	migrations = append(migrations, &gormigrate.Migration{
+		ID: "20250308203422_create_balance_histories",
+		Migrate: func(tx *gorm.DB) error {
+			type BalanceHistory struct {
+				ID              uint      `gorm:"primaryKey;autoIncrement"`
+				WalletID        uint      `gorm:"index"`
+				TransactionID   uint      `gorm:"not null"`
+				TransactionType int       `gorm:"not null"`
+				OriginAmount    float64   `gorm:"default:null"`
+				Amount          float64   `gorm:"not null"`
+				OperationType   int       `gorm:"not null"`
+				FinalAmount     float64   `gorm:"default:null"`
+				Notes           string    `gorm:"type:text"`
+				CreatedAt       time.Time `gorm:"autoCreateTime"`
+			}
+
+			return tx.AutoMigrate(&BalanceHistory{})
+		},
+
+		Rollback: func(tx *gorm.DB) error {
+			return tx.Migrator().DropTable("balance_histories")
+		},
+	})
+
+	migrations = append(migrations, &gormigrate.Migration{
+		ID: "20250308203432_create_index_balance_histories",
+		Migrate: func(tx *gorm.DB) error {
+			tx.Exec("CREATE INDEX idx_balance_histories_wallet_id_created_at ON transactions (wallet_id, created_at)")
 			return nil
 		},
 	})

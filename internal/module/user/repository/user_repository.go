@@ -17,11 +17,11 @@ func NewUserRepository(dbGorm *db.GormDBWrapper) UserRepositoryInterface {
 	}
 }
 
-func (repo *UserRepository) GetById(ctx context.Context, userId int64) *domain.UserEntity {
+func (repo *UserRepository) GetByID(ctx context.Context, userID int64) *domain.UserEntity {
 	dbgorm := repo.gorm
 
 	var entity domain.UserEntity
-	if err := dbgorm.Table("user").WithContext(ctx).Where("id = ?", userId).First(&entity).Error; err != nil {
+	if err := dbgorm.Table("users").WithContext(ctx).Where("id = ?", userID).First(&entity).Error; err != nil {
 		return nil
 	}
 

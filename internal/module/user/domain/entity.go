@@ -5,13 +5,13 @@ import (
 )
 
 type UserEntity struct {
-	ID        uint      `gorm:"primaryKey"`
-	Phone     string    `gorm:"size:20;uniqueIndex;not null"`
-	Email     string    `gorm:"size:255;unique;not null"`
-	Name      string    `gorm:"size:100"`
-	Status    int8      `gorm:"type:tinyint;not null"`
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	UpdatedAt time.Time `gorm:"autoCreateTime"`
+	ID        uint      `json:"id" db:"id"`
+	Phone     string    `json:"phone" db:"phone"`
+	Email     string    `json:"email" db:"email"`
+	Name      string    `json:"name" db:"name"`
+	Status    int8      `json:"status" db:"status"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
 func (UserEntity) TableName() string {

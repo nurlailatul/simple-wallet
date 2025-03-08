@@ -3,19 +3,30 @@ package disburse
 import (
 	"errors"
 	"simple-wallet/internal/handler/v1/response"
+	transactionDomain "simple-wallet/internal/module/transaction/domain"
+	transactionService "simple-wallet/internal/module/transaction/service"
 	userService "simple-wallet/internal/module/user/service"
+	walletService "simple-wallet/internal/module/wallet/service"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 type HTTPHandler struct {
-	userService userService.UserServiceInterface
+	transactionService transactionService.TransactionServiceInterface
+	userService        userService.UserServiceInterface
+	walletService      walletService.WalletServiceInterface
 }
 
-func NewDisburseHandler(userService userService.UserServiceInterface) *HTTPHandler {
+func NewDisburseHandler(
+	transactionService transactionService.TransactionServiceInterface,
+	userService userService.UserServiceInterface,
+	walletService walletService.WalletServiceInterface,
+) *HTTPHandler {
 	return &HTTPHandler{
-		userService: userService,
+		transactionService: transactionService,
+		userService:        userService,
+		walletService:      walletService,
 	}
 }
 
@@ -31,6 +42,7 @@ func NewDisburseHandler(userService userService.UserServiceInterface) *HTTPHandl
 //	@Param			user_id		path		int						true	"User ID"
 //	@Param			data		body		CreateDisburseRequest	true	"Create deduct balance transaction request data"
 //	@Success		200			{object}	CreateDisburseResponse
+//	@Success		400			{object}	response.CustomError
 //	@Success		404			{object}	response.CustomError
 //	@Success		422			{object}	response.CustomError
 func (h *HTTPHandler) createDisbursement(c *gin.Context) {
@@ -43,12 +55,37 @@ func (h *HTTPHandler) createDisbursement(c *gin.Context) {
 	}
 
 	userID, _ := strconv.ParseInt(c.Param("user_id"), 10, 64)
-	user := h.userService.GetById(ctx, userID)
+	user := h.userService.GetByID(ctx, userID)
 	if user == nil {
 		response.SendError(c, response.ErrRecordNotFound, errors.New("user not found"))
 		return
 	}
 
+	wallet := h.walletService.GetByUserID(ctx, userID)
+	if wallet == nil {
+		response.SendError(c, response.ErrRecordNotFound, errors.New("wallet not found"))
+		return
+	}
+
+	existingTrx := h.transactionService.GetByReferenceID(ctx, request.ReferenceID.String())
+	if existingTrx != nil {
+		response.SendError(c, response.ErrRequestUnprocessed, errors.New("reference_id exist"))
+		return
+	}
+
+	req := transactionDomain.DeductBalanceRequest{
+		WalletID:              wallet.ID,
+		Amount:                request.Amount,
+		ReceiverBank:          request.ReceiverBank,
+		ReceiverAccountNumber: request.ReceiverAccountNumber,
+		ReferenceID:           request.ReferenceID.String(),
+	}
+
+	err := h.transactionService.DeductBalance(ctx, req)
+	if err != nil {
+		response.SendError(c, response.ErrRequestUnprocessed, err)
+		return
+	}
+
 	response.SendSuccess(c, nil, nil)
-	response.SendSuccess(c, "Success", nil)
 }

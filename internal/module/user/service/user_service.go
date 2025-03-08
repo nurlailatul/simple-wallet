@@ -18,6 +18,6 @@ func NewUserService(
 	}
 }
 
-func (s *UserService) GetById(ctx context.Context, userID int64) *domain.UserEntity {
-	return s.userRepo.GetById(ctx, userID)
+func (s *UserService) GetByID(ctx context.Context, userID int64) *domain.UserEntity {
+	return s.userRepo.GetByID(ctx, userID)
 }
