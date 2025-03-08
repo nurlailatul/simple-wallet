@@ -2,8 +2,6 @@ package domain
 
 import (
 	"time"
-
-	walletDomain "simple-wallet/internal/module/wallet/domain"
 )
 
 type UserEntity struct {
@@ -14,7 +12,6 @@ type UserEntity struct {
 	Status    int8      `gorm:"type:tinyint;not null"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoCreateTime"`
-	Wallet    walletDomain.WalletEntity
 }
 
 func (UserEntity) TableName() string {
