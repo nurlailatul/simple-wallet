@@ -8,6 +8,7 @@ type Configuration struct {
 	App      AppConfiguration      `mapstructure:"app"`
 	Server   ServerConfiguration   `mapstructure:"server"`
 	Database DatabaseConfiguration `mapstructure:"database"`
+	Swagger  SwaggerConfiguration  `mapstructure:"swagger" yaml:"swagger"`
 }
 
 type AppConfiguration struct {
@@ -21,4 +22,12 @@ type ServerConfiguration struct {
 
 type DatabaseConfiguration struct {
 	Main db.Config `mapstructure:"main"`
+}
+
+type SwaggerConfiguration struct {
+	Description string   `mapstructure:"description" yaml:"description"`
+	Title       string   `mapstructure:"title" yaml:"title"`
+	Version     string   `mapstructure:"version" yaml:"version"`
+	Schemes     []string `mapstructure:"schemes" yaml:"schemes"`
+	ApiKey      string   `mapstructure:"apiKey" yaml:"apiKey"`
 }

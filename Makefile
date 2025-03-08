@@ -34,3 +34,7 @@ vet:
 deps:
 	@echo "Downloading dependencies..."
 	@go mod tidy
+
+swagger:
+	go install github.com/swaggo/swag/cmd/swag@latest
+	swag init -g main.go

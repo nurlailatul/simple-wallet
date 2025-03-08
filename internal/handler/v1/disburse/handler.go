@@ -17,6 +17,14 @@ func NewDisburseHandler(userService userService.UserServiceInterface) *HTTPHandl
 	}
 }
 
+// Ping godoc
+//
+//	@Router			/api/v1/ping [get]
+//	@Summary		Ping
+//	@Description	Ping
+//	@Accept			json
+//	@Produce		json
+//	@Success		200
 func (h *HTTPHandler) testHTTP(c *gin.Context) {
 	response.SendSuccess(c, "Success", nil)
 }

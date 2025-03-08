@@ -44,7 +44,7 @@ func serveHTTP(ctx context.Context) error {
 		return err
 	}
 
-	appServices := httpApp.SetupDependencies(ctx)
+	appServices := httpApp.SetupDependencies(ctx, cfg)
 	// middleware := appServices.SetupMiddleware()
 	route := appServices.SetupHttpRouteHandler(cfg)
 	httpServer.RegisterRoutes(route)

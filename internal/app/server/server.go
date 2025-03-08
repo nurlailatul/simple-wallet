@@ -8,7 +8,8 @@ import (
 )
 
 type Route struct {
-	V1 []RouteHandler
+	V1    []RouteHandler
+	Other []RouteHandler
 }
 
 type RouteHandler struct {

@@ -68,4 +68,8 @@ func (s *Server) RegisterRoutes(route Route) {
 	for _, route := range route.V1 {
 		v1Group.Handle(route.Method, route.Path, route.Handler...)
 	}
+
+	for _, route := range route.Other {
+		s.engine.Handle(route.Method, route.Path, route.Handler...)
+	}
 }
