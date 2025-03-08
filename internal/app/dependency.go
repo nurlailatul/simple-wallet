@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"simple-wallet/config"
-	"simple-wallet/internal/infrastructure/database"
 	"simple-wallet/internal/middleware"
 	balanceHistoryRepository "simple-wallet/internal/module/balance_history/repository"
 	transactionRepository "simple-wallet/internal/module/transaction/repository"
@@ -29,24 +28,18 @@ type AppService struct {
 
 func (a *Application) SetupDependencies(ctx context.Context, cfg *config.Configuration) *AppService {
 	gormWrapper := a.Infrastructure.DB().GormDb()
-	sqlxWrapper := a.Infrastructure.DB().SqlxDB()
-	connection := database.DBConnection{}
-	connection = connection.GetConnection()
 
 	swaggerAuthMiddleware := middleware.NewSwaggerAuthMiddleware(&cfg.Swagger)
 
 	userRepo := userRepository.NewUserRepository(gormWrapper)
-	balanceHistoryRepo := balanceHistoryRepository.NewBalanceHistoryRepository(gormWrapper)
-	transactionRepo := transactionRepository.NewTransactionRepository(gormWrapper)
-	walletRepo := walletRepository.NewWalletRepository(gormWrapper, sqlxWrapper)
+	transactionRepo := transactionRepository.NewTransactionRepository(gormWrapper.DB)
+	walletRepo := walletRepository.NewWalletRepository(gormWrapper.DB)
 
 	userService := userService.NewUserService(userRepo)
 	walletService := walletService.NewWalletService(walletRepo)
 	transactionService := transactionService.NewTransactionService(
-		balanceHistoryRepo,
 		transactionRepo,
-		walletRepo,
-		&connection,
+		gormWrapper,
 	)
 
 	return &AppService{

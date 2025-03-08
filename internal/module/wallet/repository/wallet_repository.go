@@ -4,21 +4,20 @@ import (
 	"context"
 
 	"simple-wallet/internal/module/wallet/domain"
-	"simple-wallet/pkg/db"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type WalletRepository struct {
-	gorm *db.GormDBWrapper
-	sqlx *db.SqlxDBWrapper
+	gorm *gorm.DB
 }
 
 func NewWalletRepository(
-	dbGorm *db.GormDBWrapper,
-	dbSqlx *db.SqlxDBWrapper,
+	dbGorm *gorm.DB,
 ) WalletRepositoryInterface {
 	return &WalletRepository{
 		gorm: dbGorm,
-		sqlx: dbSqlx,
 	}
 }
 
@@ -34,11 +33,10 @@ func (repo *WalletRepository) GetByUserID(ctx context.Context, userID int64) *do
 }
 
 func (repo *WalletRepository) GetByUserIDForLocking(ctx context.Context, id int64) *domain.WalletEntity {
-	db := repo.sqlx
+	db := repo.gorm
 
 	var entity domain.WalletEntity
-	query := "SELECT * FROM wallets WHERE id = ? FOR UPDATE"
-	if err := db.GetContext(ctx, &entity, query, id); err != nil {
+	if err := db.Table("wallets").WithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", id).First(&entity).Error; err != nil {
 		return nil
 	}
 

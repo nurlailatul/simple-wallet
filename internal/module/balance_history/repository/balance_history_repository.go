@@ -4,15 +4,16 @@ import (
 	"context"
 
 	"simple-wallet/internal/module/balance_history/domain"
-	"simple-wallet/pkg/db"
+
+	"gorm.io/gorm"
 )
 
 type BalanceHistoryRepository struct {
-	gorm *db.GormDBWrapper
+	gorm *gorm.DB
 }
 
 func NewBalanceHistoryRepository(
-	dbGorm *db.GormDBWrapper,
+	dbGorm *gorm.DB,
 ) BalanceHistoryRepositoryInterface {
 	return &BalanceHistoryRepository{
 		gorm: dbGorm,

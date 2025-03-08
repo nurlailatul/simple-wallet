@@ -4,14 +4,15 @@ import (
 	"context"
 
 	"simple-wallet/internal/module/transaction/domain"
-	"simple-wallet/pkg/db"
+
+	"gorm.io/gorm"
 )
 
 type TransactionRepository struct {
-	gorm *db.GormDBWrapper
+	gorm *gorm.DB
 }
 
-func NewTransactionRepository(dbGorm *db.GormDBWrapper) TransactionRepositoryInterface {
+func NewTransactionRepository(dbGorm *gorm.DB) TransactionRepositoryInterface {
 	return &TransactionRepository{
 		gorm: dbGorm,
 	}

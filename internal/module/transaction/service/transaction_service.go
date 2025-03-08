@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"simple-wallet/internal/infrastructure/database"
 	balanceHistoryDomain "simple-wallet/internal/module/balance_history/domain"
 	balanceHistoryRepository "simple-wallet/internal/module/balance_history/repository"
 	"simple-wallet/internal/module/transaction/domain"
 	"simple-wallet/internal/module/transaction/repository"
 	walletRepository "simple-wallet/internal/module/wallet/repository"
+	"simple-wallet/pkg/db"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -18,23 +18,17 @@ import (
 var logFormat = "[TransactionService][%v][UserID:%v]"
 
 type TransactionService struct {
-	balanceHistoryRepo balanceHistoryRepository.BalanceHistoryRepositoryInterface
-	repo               repository.TransactionRepositoryInterface
-	walletRepo         walletRepository.WalletRepositoryInterface
-	connection         database.MySQLDBInterface
+	repo      repository.TransactionRepositoryInterface
+	dbWrapper *db.GormDBWrapper
 }
 
 func NewTransactionService(
-	balanceHistoryRepo balanceHistoryRepository.BalanceHistoryRepositoryInterface,
 	repo repository.TransactionRepositoryInterface,
-	walletRepo walletRepository.WalletRepositoryInterface,
-	connection database.MySQLDBInterface,
+	dbWrapper *db.GormDBWrapper,
 ) TransactionServiceInterface {
 	return &TransactionService{
-		balanceHistoryRepo: balanceHistoryRepo,
-		repo:               repo,
-		walletRepo:         walletRepo,
-		connection:         connection,
+		dbWrapper: dbWrapper,
+		repo:      repo,
 	}
 }
 
@@ -43,19 +37,21 @@ func (s *TransactionService) GetByReferenceID(ctx context.Context, referenceID s
 }
 
 func (s *TransactionService) DeductBalance(ctx context.Context, request domain.DeductBalanceRequest) error {
-	// log.SetFormatter(&log.JSONFormatter{})
 	logf := fmt.Sprintf(logFormat, "DeductBalance", request.UserID)
-	message := ""
+	var (
+		err     error
+		message string
+	)
 
-	// Start a transaction
-	tx := s.connection.BeginTx(ctx, s.connection.GetConnection().DB)
+	tx := s.dbWrapper.Begin()
 	defer func() {
 		if r := recover(); r != nil {
-			s.connection.RollbackTx(tx)
+			tx.Rollback()
 		}
 	}()
 
-	wallet := s.walletRepo.GetByUserIDForLocking(tx, request.WalletID)
+	walletRepo := walletRepository.NewWalletRepository(tx)
+	wallet := walletRepo.GetByUserIDForLocking(ctx, request.WalletID)
 	if wallet == nil {
 		return errors.New("record not found")
 	}
@@ -69,10 +65,9 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 	wallet.Balance -= request.Amount
 	finalAmount := wallet.Balance
 
-	err := s.walletRepo.Update(tx, wallet)
+	err = walletRepo.Update(ctx, wallet)
 	if err != nil {
-		s.connection.RollbackTx(tx)
-
+		tx.Rollback()
 		message = "error deduct wallet balance"
 		log.Errorf("%v %v: %v", logf, message, err.Error())
 		return errors.New(message)
@@ -88,10 +83,9 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 		CreatedAt:             time.Now(),
 	}
 
-	trxID, err := s.repo.Create(tx, trx)
+	trxID, err := repository.NewTransactionRepository(tx).Create(ctx, trx)
 	if err != nil {
-		s.connection.RollbackTx(tx)
-
+		tx.Rollback()
 		message = "error create deduct transaction"
 		log.Errorf("%v %v: %v", logf, message, err.Error())
 		return errors.New(message)
@@ -107,17 +101,20 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 		FinalAmount:     finalAmount,
 	}
 
-	s.connection.RollbackTx(tx)
-
-	if err = s.balanceHistoryRepo.Create(tx, history); err != nil {
-		s.connection.RollbackTx(tx)
+	if err = balanceHistoryRepository.NewBalanceHistoryRepository(tx).Create(ctx, history); err != nil {
+		tx.Rollback()
 
 		message = "error create balance history"
 		log.Errorf("%v %v: %v", logf, message, err.Error())
 		return errors.New(message)
 	}
 
-	s.connection.CommitTx(tx)
+	err = tx.Commit().Error
+	if err != nil {
+		message = "error commit transaction"
+		log.Errorf("%v %v: %v", logf, message, err.Error())
+		return errors.New(message)
+	}
 
 	message = "Success deduct balance"
 	log.Infof("%v %v: %v", logf, message, "")
