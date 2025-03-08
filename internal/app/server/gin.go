@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,7 +15,7 @@ type Router struct {
 }
 
 func New(options ...func(*Server)) *Server {
-	gin.DefaultWriter = io.Discard
+	// gin.DefaultWriter = io.Discard
 	router := gin.Default()
 	// to ensure rate limiter to work, we need to pass actual client IP address
 	router.ForwardedByClientIP = true
@@ -47,17 +46,17 @@ func (s *Server) Start() error {
 		<-sigint
 		cancel()
 
-		log.Info(ctx, "Server is shutting down")
+		log.Info("Server is shutting down")
 		if err := srv.Shutdown(ctx); err != nil {
-			log.Error(ctx, "Fail to shutting down", err)
+			log.Error("Fail to shutting down", err)
 		}
 		close(idleConnection)
 	}(ctx)
 
-	log.Info(ctx, "server running")
+	log.Info("server running")
 
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatal(ctx, "cannot start server with error", err)
+		log.Fatal("cannot start server with error", err)
 		return err
 	}
 	<-idleConnection

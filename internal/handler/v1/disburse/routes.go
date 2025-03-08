@@ -18,12 +18,12 @@ func (h *HTTPHandler) RegisterRoute() []server.RouteHandler {
 			Method: http.MethodPost,
 			Path:   DisbursePath,
 			Handler: []gin.HandlerFunc{
-				h.getIdentityImageData,
+				h.createDisbursement,
 			},
 		},
 		{
 			Method: http.MethodGet,
-			Path:   DisbursePath,
+			Path:   "/ping",
 			Handler: []gin.HandlerFunc{
 				h.testHTTP,
 			},

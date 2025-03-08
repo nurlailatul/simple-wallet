@@ -30,9 +30,8 @@ type SQLStore struct {
 func NewSQLStore(ctx context.Context, dbConfig db.Config) (Store, error) {
 	connectionTimeout := 3 * time.Second
 
-	log.Info(ctx,
-		fmt.Sprintf("database configs master, max open %d, max idle %d, max lifetime %d",
-			dbConfig.MaxOpen, dbConfig.MaxIdle, dbConfig.MaxLifetime))
+	log.Info(fmt.Sprintf("database configs master, max open %d, max idle %d, max lifetime %d",
+		dbConfig.MaxOpen, dbConfig.MaxIdle, dbConfig.MaxLifetime))
 
 	configMaster := db.Config{
 		Host:        dbConfig.Host,

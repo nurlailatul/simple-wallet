@@ -1,9 +1,10 @@
 package config
 
 import (
-	"log"
 	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/viper"
 )

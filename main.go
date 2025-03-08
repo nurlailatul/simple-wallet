@@ -1,19 +1,27 @@
 package main
 
 import (
-	"simple-wallet/internal/app"
+	"context"
+	console "simple-wallet/cmd"
+
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/ukautz/clif.v1"
 )
 
 func main() {
-	// router := gin.Default()
+	ctx := context.Background()
+	cli := clif.New("b2b-company-management-service", "1.0.0", "Company Management Service for FFB")
+	cmd, err := console.Init()
+	if err != nil {
+		log.Fatal("failed init console", err)
+	}
 
-	app.StartServer()
+	cli.Add(cmd.StartServer())
 
-	// router.GET("/ping", func(c *gin.Context) {
-	// 	c.JSON(200, gin.H{
-	// 		"message": "pong",
-	// 	})
-	// })
+	cli.Add(cmd.MigrateRun(ctx))
+	cli.Add(cmd.MigrateRollback())
+	cli.Add(cmd.MigrateReset())
+	cli.Add(cmd.MigrateRefresh())
 
-	// router.Run(":8585")
+	cli.Run()
 }
