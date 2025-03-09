@@ -2,6 +2,7 @@ package disburse
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 
 	transactionDomain "simple-wallet/internal/module/transaction/domain"
 	transactionMocks "simple-wallet/internal/module/transaction/mocks"
@@ -21,139 +23,200 @@ import (
 	walletMocks "simple-wallet/internal/module/wallet/mocks"
 )
 
-func TestNewDisburseHandler(t *testing.T) {
-	mockUserService := new(userMocks.UserRepositoryInterface)
-	mockWalletService := new(walletMocks.WalletRepositoryInterface)
-	mockTransactionService := new(transactionMocks.TransactionServiceInterface)
-
-	h := NewDisburseHandler(mockTransactionService, mockUserService, mockWalletService)
-
-	assert.NotNil(t, h)
-	assert.Equal(t, mockTransactionService, h.transactionService)
-	assert.Equal(t, mockUserService, h.userService)
-	assert.Equal(t, mockWalletService, h.walletService)
+type DisbursementTestSuite struct {
+	suite.Suite
+	userService        *userMocks.UserRepositoryInterface
+	walletService      *walletMocks.WalletServiceInterface
+	transactionService *transactionMocks.TransactionServiceInterface
 }
 
-func setupHandler() HTTPHandler {
-	mockUserService := new(userMocks.UserRepositoryInterface)
-	mockWalletService := new(walletMocks.WalletRepositoryInterface)
-	mockTransactionService := new(transactionMocks.TransactionServiceInterface)
-
-	return HTTPHandler{
-		userService:        mockUserService,
-		walletService:      mockWalletService,
-		transactionService: mockTransactionService,
-	}
+func TestDisbursementHandler(t *testing.T) {
+	suite.Run(t, new(DisbursementTestSuite))
 }
 
-func TestCreateDisbursement(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	r := gin.Default()
+func (s *DisbursementTestSuite) SetupSuite(t *testing.T) *DisbursementTestSuite {
+	s.Suite.SetT(t)
+	s.userService = new(userMocks.UserRepositoryInterface)
+	s.walletService = new(walletMocks.WalletServiceInterface)
+	s.transactionService = new(transactionMocks.TransactionServiceInterface)
 
-	mockUserService := new(userMocks.UserRepositoryInterface)
-	mockWalletService := new(walletMocks.WalletRepositoryInterface)
-	mockTransactionService := new(transactionMocks.TransactionServiceInterface)
+	return s
+}
 
-	h := HTTPHandler{
-		userService:        mockUserService,
-		walletService:      mockWalletService,
-		transactionService: mockTransactionService,
-	}
-
-	r.POST("/disburse/:user_id", h.createDisbursement)
-
-	// Sample request
+func (s *DisbursementTestSuite) TestDisbursementHandler_createDisbursement() {
 	requestBody := CreateDisburseRequest{
 		Amount:                1000,
 		ReceiverBank:          "BCA",
 		ReceiverAccountNumber: "1234567890",
 		ReferenceID:           "ref123",
 	}
-	jsonValue, _ := json.Marshal(requestBody)
 
-	t.Run("Success", func(t *testing.T) {
-		userID := int64(1)
-		walletID := int64(1)
+	userID := int64(1)
+	walletID := int64(1)
 
-		mockUserService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
-		mockWalletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
-		mockTransactionService.On("GetByReferenceID", mock.Anything, requestBody.ReferenceID).Return(nil)
-		mockTransactionService.On("DeductBalance", mock.Anything, mock.Anything).Return(nil)
+	type fields struct {
+		userService        *userMocks.UserRepositoryInterface
+		walletService      *walletMocks.WalletServiceInterface
+		transactionService *transactionMocks.TransactionServiceInterface
+	}
+	type args struct {
+		ctx     context.Context
+		userID  int64
+		request CreateDisburseRequest
+	}
+	tests := []struct {
+		name   string
+		fields func(t *testing.T) fields
+		args   args
+		want   int
+	}{
+		{
+			name: "Success",
+			fields: func(t *testing.T) fields {
+				s := new(DisbursementTestSuite).SetupSuite(t)
 
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request, _ = http.NewRequest(http.MethodPost, "/disburse/1", bytes.NewBuffer(jsonValue))
-		c.Params = gin.Params{{Key: "user_id", Value: strconv.FormatInt(userID, 10)}}
+				s.userService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
+				s.walletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
+				s.transactionService.On("GetByReferenceID", mock.Anything, requestBody.ReferenceID).Return(nil)
+				s.transactionService.On("DeductBalance", mock.Anything, mock.Anything).Return(nil)
 
-		h.createDisbursement(c)
+				return fields{
+					userService:        s.userService,
+					walletService:      s.walletService,
+					transactionService: s.transactionService,
+				}
+			},
+			args: args{
+				ctx:     context.Background(),
+				userID:  userID,
+				request: requestBody,
+			},
+			want: http.StatusOK,
+		},
+		{
+			name: "DeductBalanceError",
+			fields: func(t *testing.T) fields {
+				s := new(DisbursementTestSuite).SetupSuite(t)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-	})
+				s.userService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
+				s.walletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
+				s.transactionService.On("GetByReferenceID", mock.Anything, requestBody.ReferenceID).Return(nil)
+				s.transactionService.On("DeductBalance", mock.Anything, mock.Anything).Return(errors.New("error deduct wallet balance"))
 
-	t.Run("User_Not_Found", func(t *testing.T) {
-		userID := int64(2)
-		mockUserService.On("GetByID", mock.Anything, userID).Return(nil)
+				return fields{
+					userService:        s.userService,
+					walletService:      s.walletService,
+					transactionService: s.transactionService,
+				}
+			},
+			args: args{
+				ctx:     context.Background(),
+				userID:  userID,
+				request: requestBody,
+			},
+			want: http.StatusBadRequest,
+		},
+		{
+			name: "ReferenceIDExist",
+			fields: func(t *testing.T) fields {
+				s := new(DisbursementTestSuite).SetupSuite(t)
 
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request, _ = http.NewRequest(http.MethodPost, "/disburse/2", bytes.NewBuffer(jsonValue))
-		c.Params = gin.Params{{Key: "user_id", Value: strconv.FormatInt(userID, 10)}}
+				s.userService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
+				s.walletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
+				s.transactionService.On("GetByReferenceID", mock.Anything, requestBody.ReferenceID).Return(&transactionDomain.TransactionEntity{ID: 1})
 
-		h.createDisbursement(c)
+				return fields{
+					userService:        s.userService,
+					walletService:      s.walletService,
+					transactionService: s.transactionService,
+				}
+			},
+			args: args{
+				ctx:     context.Background(),
+				userID:  userID,
+				request: requestBody,
+			},
+			want: http.StatusBadRequest,
+		},
+		{
+			name: "WalletNotFound",
+			fields: func(t *testing.T) fields {
+				s := new(DisbursementTestSuite).SetupSuite(t)
 
-		assert.Equal(t, http.StatusNotFound, w.Code)
-	})
+				s.userService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
+				s.walletService.On("GetByUserID", mock.Anything, userID).Return(nil)
 
-	t.Run("Wallet_Not_Found", func(t *testing.T) {
-		userID := int64(4)
+				return fields{
+					userService:        s.userService,
+					walletService:      s.walletService,
+					transactionService: s.transactionService,
+				}
+			},
+			args: args{
+				ctx:     context.Background(),
+				userID:  userID,
+				request: requestBody,
+			},
+			want: http.StatusNotFound,
+		},
+		{
+			name: "UserNotFound",
+			fields: func(t *testing.T) fields {
+				s := new(DisbursementTestSuite).SetupSuite(t)
 
-		mockUserService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
-		mockWalletService.On("GetByUserID", mock.Anything, userID).Return(nil)
+				s.userService.On("GetByID", mock.Anything, userID).Return(nil)
 
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request, _ = http.NewRequest(http.MethodPost, "/disburse/4", bytes.NewBuffer(jsonValue))
-		c.Params = gin.Params{{Key: "user_id", Value: strconv.FormatInt(userID, 10)}}
+				return fields{
+					userService:        s.userService,
+					walletService:      s.walletService,
+					transactionService: s.transactionService,
+				}
+			},
+			args: args{
+				ctx:     context.Background(),
+				userID:  userID,
+				request: requestBody,
+			},
+			want: http.StatusNotFound,
+		},
+		{
+			name: "Error Params",
+			fields: func(t *testing.T) fields {
+				s := new(DisbursementTestSuite).SetupSuite(t)
 
-		h.createDisbursement(c)
+				return fields{
+					userService:        s.userService,
+					walletService:      s.walletService,
+					transactionService: s.transactionService,
+				}
+			},
+			args: args{
+				ctx:    context.Background(),
+				userID: userID,
+				request: CreateDisburseRequest{
+					ReceiverBank:          "BCA",
+					ReceiverAccountNumber: "1234567890",
+					ReferenceID:           "ref123",
+				},
+			},
+			want: http.StatusBadRequest,
+		},
+	}
 
-		assert.Equal(t, http.StatusNotFound, w.Code)
-	})
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			mocks := tt.fields(t)
+			h := NewDisburseHandler(mocks.transactionService, mocks.userService, mocks.walletService)
 
-	t.Run("Reference_id_exist", func(t *testing.T) {
-		userID := int64(4)
-		walletID := int64(4)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			payload, _ := json.Marshal(tt.args.request)
+			c.Request, _ = http.NewRequest(http.MethodPost, "/disburse/"+strconv.FormatInt(tt.args.userID, 10), bytes.NewBuffer(payload))
+			c.Params = gin.Params{{Key: "user_id", Value: strconv.FormatInt(tt.args.userID, 10)}}
 
-		mockUserService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
-		mockWalletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
-		mockTransactionService.On("GetByReferenceID", mock.Anything, requestBody.ReferenceID).Return(&transactionDomain.TransactionEntity{ID: 1})
+			h.createDisbursement(c)
 
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request, _ = http.NewRequest(http.MethodPost, "/disburse/4", bytes.NewBuffer(jsonValue))
-		c.Params = gin.Params{{Key: "user_id", Value: strconv.FormatInt(userID, 10)}}
-
-		h.createDisbursement(c)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-	})
-
-	t.Run("DeductBalance_Error", func(t *testing.T) {
-		userID := int64(4)
-		walletID := int64(4)
-
-		mockUserService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
-		mockWalletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
-		mockTransactionService.On("GetByReferenceID", mock.Anything, requestBody.ReferenceID).Return(nil)
-		mockTransactionService.On("DeductBalance", mock.Anything, mock.Anything).Return(errors.New("deduction failed"))
-
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request, _ = http.NewRequest(http.MethodPost, "/disburse/4", bytes.NewBuffer(jsonValue))
-		c.Params = gin.Params{{Key: "user_id", Value: strconv.FormatInt(userID, 10)}}
-
-		h.createDisbursement(c)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-	})
+			assert.Equal(t, tt.want, w.Code)
+		})
+	}
 }
