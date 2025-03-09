@@ -1,4 +1,4 @@
-package disburse
+package wallets
 
 import (
 	"time"

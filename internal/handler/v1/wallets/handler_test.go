@@ -1,4 +1,4 @@
-package disburse
+package wallets
 
 import (
 	"bytes"
@@ -23,18 +23,18 @@ import (
 	walletMocks "simple-wallet/internal/module/wallet/mocks"
 )
 
-type DisbursementTestSuite struct {
+type WalletTestSuite struct {
 	suite.Suite
 	userService        *userMocks.UserRepositoryInterface
 	walletService      *walletMocks.WalletServiceInterface
 	transactionService *transactionMocks.TransactionServiceInterface
 }
 
-func TestDisbursementHandler(t *testing.T) {
-	suite.Run(t, new(DisbursementTestSuite))
+func TestWalletHandler(t *testing.T) {
+	suite.Run(t, new(WalletTestSuite))
 }
 
-func (s *DisbursementTestSuite) SetupSuite(t *testing.T) *DisbursementTestSuite {
+func (s *WalletTestSuite) SetupSuite(t *testing.T) *WalletTestSuite {
 	s.Suite.SetT(t)
 	s.userService = new(userMocks.UserRepositoryInterface)
 	s.walletService = new(walletMocks.WalletServiceInterface)
@@ -43,7 +43,7 @@ func (s *DisbursementTestSuite) SetupSuite(t *testing.T) *DisbursementTestSuite 
 	return s
 }
 
-func (s *DisbursementTestSuite) TestDisbursementHandler_createDisbursement() {
+func (s *WalletTestSuite) TestWalletHandler_createWallet() {
 	requestBody := CreateDisburseRequest{
 		Amount:                1000,
 		ReceiverBank:          "BCA",
@@ -73,7 +73,7 @@ func (s *DisbursementTestSuite) TestDisbursementHandler_createDisbursement() {
 		{
 			name: "Success",
 			fields: func(t *testing.T) fields {
-				s := new(DisbursementTestSuite).SetupSuite(t)
+				s := new(WalletTestSuite).SetupSuite(t)
 
 				s.userService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
 				s.walletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
@@ -96,7 +96,7 @@ func (s *DisbursementTestSuite) TestDisbursementHandler_createDisbursement() {
 		{
 			name: "DeductBalanceError",
 			fields: func(t *testing.T) fields {
-				s := new(DisbursementTestSuite).SetupSuite(t)
+				s := new(WalletTestSuite).SetupSuite(t)
 
 				s.userService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
 				s.walletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
@@ -119,7 +119,7 @@ func (s *DisbursementTestSuite) TestDisbursementHandler_createDisbursement() {
 		{
 			name: "ReferenceIDExist",
 			fields: func(t *testing.T) fields {
-				s := new(DisbursementTestSuite).SetupSuite(t)
+				s := new(WalletTestSuite).SetupSuite(t)
 
 				s.userService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
 				s.walletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
@@ -141,7 +141,7 @@ func (s *DisbursementTestSuite) TestDisbursementHandler_createDisbursement() {
 		{
 			name: "WalletNotFound",
 			fields: func(t *testing.T) fields {
-				s := new(DisbursementTestSuite).SetupSuite(t)
+				s := new(WalletTestSuite).SetupSuite(t)
 
 				s.userService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
 				s.walletService.On("GetByUserID", mock.Anything, userID).Return(nil)
@@ -162,7 +162,7 @@ func (s *DisbursementTestSuite) TestDisbursementHandler_createDisbursement() {
 		{
 			name: "UserNotFound",
 			fields: func(t *testing.T) fields {
-				s := new(DisbursementTestSuite).SetupSuite(t)
+				s := new(WalletTestSuite).SetupSuite(t)
 
 				s.userService.On("GetByID", mock.Anything, userID).Return(nil)
 
@@ -182,7 +182,7 @@ func (s *DisbursementTestSuite) TestDisbursementHandler_createDisbursement() {
 		{
 			name: "Error Params",
 			fields: func(t *testing.T) fields {
-				s := new(DisbursementTestSuite).SetupSuite(t)
+				s := new(WalletTestSuite).SetupSuite(t)
 
 				return fields{
 					userService:        s.userService,
@@ -206,12 +206,12 @@ func (s *DisbursementTestSuite) TestDisbursementHandler_createDisbursement() {
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
 			mocks := tt.fields(t)
-			h := NewDisburseHandler(mocks.transactionService, mocks.userService, mocks.walletService)
+			h := NewWalletHandler(mocks.transactionService, mocks.userService, mocks.walletService)
 
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 			payload, _ := json.Marshal(tt.args.request)
-			c.Request, _ = http.NewRequest(http.MethodPost, "/disburse/"+strconv.FormatInt(tt.args.userID, 10), bytes.NewBuffer(payload))
+			c.Request, _ = http.NewRequest(http.MethodPost, "/wallets/"+strconv.FormatInt(tt.args.userID, 10), bytes.NewBuffer(payload))
 			c.Params = gin.Params{{Key: "user_id", Value: strconv.FormatInt(tt.args.userID, 10)}}
 
 			h.createDisbursement(c)

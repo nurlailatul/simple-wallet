@@ -1,4 +1,4 @@
-package disburse
+package wallets
 
 import (
 	"errors"
@@ -18,7 +18,7 @@ type HTTPHandler struct {
 	walletService      walletService.WalletServiceInterface
 }
 
-func NewDisburseHandler(
+func NewWalletHandler(
 	transactionService transactionService.TransactionServiceInterface,
 	userService userService.UserServiceInterface,
 	walletService walletService.WalletServiceInterface,

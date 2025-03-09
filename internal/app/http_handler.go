@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"simple-wallet/config"
 	"simple-wallet/internal/app/server"
-	disburseHandler "simple-wallet/internal/handler/v1/disburse"
+	walletsHandler "simple-wallet/internal/handler/v1/wallets"
 	"simple-wallet/internal/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +24,7 @@ func (a *AppService) SetupHttpRouteHandler(cfg *config.Configuration) server.Rou
 
 func (a *AppService) setupV1Handler(auth *middleware.AuthMiddleware) []server.RouteHandler {
 	routes := make([]server.RouteHandler, 0)
-	routes = append(routes, disburseHandler.NewDisburseHandler(a.TransactionService, a.UserService, a.WalletService).RegisterRoute(auth)...)
+	routes = append(routes, walletsHandler.NewWalletHandler(a.TransactionService, a.UserService, a.WalletService).RegisterRoute(auth)...)
 
 	return routes
 }

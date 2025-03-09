@@ -15,8 +15,8 @@ import (
 //	@version		1.0.0
 //	@description	This is a Wallet Service server.
 
-//	@host		api-stg.paper.id
-//	@schemes	http https
+// @host		api-stg.paper.id
+// @schemes	http https
 func main() {
 	ctx := context.Background()
 	cli := clif.New("b2b-company-management-service", "1.0.0", "Company Management Service for FFB")
