@@ -97,7 +97,7 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 		ReceiverAccountNumber: request.ReceiverAccountNumber,
 		Status:                domain.StatusPending,
 		ReferenceID:           request.ReferenceID,
-		CreatedAt:             time.Now(),
+		CreatedAt:             uint(time.Now().Unix()),
 	}
 
 	trxID, err := repository.NewTransactionRepository(tx).Create(ctx, trx)

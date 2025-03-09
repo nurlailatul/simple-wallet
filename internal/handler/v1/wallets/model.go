@@ -1,8 +1,6 @@
 package wallets
 
 import (
-	"time"
-
 	"github.com/gofrs/uuid"
 )
 
@@ -18,11 +16,11 @@ type CreateDisburseResponse struct {
 	NewBalance  float64   `json:"new_balance"`
 	Status      string    `json:"status"`
 	ReferenceID uuid.UUID `json:"reference_id"`
-	CreatedAt   time.Time `json:"created_at"`
+	CreatedAt   string    `json:"created_at"`
 }
 
 type GetWalletBalanceResponse struct {
-	WalletID  uint      `json:"wallet_id"`
-	Balance   float64   `json:"balance"`
-	UpdatedAt time.Time `json:"updated_at"`
+	WalletID  uint    `json:"wallet_id"`
+	Balance   float64 `json:"balance"`
+	UpdatedAt string  `json:"updated_at"`
 }

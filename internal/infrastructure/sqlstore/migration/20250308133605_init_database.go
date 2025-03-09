@@ -1,8 +1,6 @@
 package migration
 
 import (
-	"time"
-
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
 )
@@ -12,13 +10,13 @@ func init() {
 		ID: "20250308133605_create_users",
 		Migrate: func(tx *gorm.DB) error {
 			type User struct {
-				ID        uint      `gorm:"primaryKey"`
-				Phone     string    `gorm:"size:20;uniqueIndex;not null"`
-				Email     string    `gorm:"size:255;unique;not null"`
-				Name      string    `gorm:"size:100"`
-				Status    int8      `gorm:"type:tinyint;not null"`
-				CreatedAt time.Time `gorm:"autoCreateTime"`
-				UpdatedAt time.Time `gorm:"autoCreateTime"`
+				ID        uint   `gorm:"primaryKey"`
+				Phone     string `gorm:"size:20;uniqueIndex;not null"`
+				Email     string `gorm:"size:255;unique;not null"`
+				Name      string `gorm:"size:100"`
+				Status    int8   `gorm:"type:tinyint;not null"`
+				CreatedAt uint   `gorm:"autoCreateTime"`
+				UpdatedAt uint   `gorm:"autoCreateTime"`
 			}
 
 			return tx.AutoMigrate(&User{})
@@ -41,11 +39,11 @@ func init() {
 		ID: "20250308134529_create_wallets",
 		Migrate: func(tx *gorm.DB) error {
 			type Wallet struct {
-				ID        uint      `gorm:"primaryKey"`
-				UserID    uint      `gorm:"not null;uniqueIndex"`
-				Balance   float64   `gorm:"type:decimal(20,2);default:0.00"`
-				CreatedAt time.Time `gorm:"autoCreateTime;index"`
-				UpdatedAt time.Time `gorm:"autoCreateTime"`
+				ID        uint    `gorm:"primaryKey"`
+				UserID    uint    `gorm:"not null;uniqueIndex"`
+				Balance   float64 `gorm:"type:decimal(20,2);default:0.00"`
+				CreatedAt uint    `gorm:"autoCreateTime;index"`
+				UpdatedAt uint    `gorm:"autoCreateTime"`
 			}
 
 			return tx.AutoMigrate(&Wallet{})
@@ -68,16 +66,16 @@ func init() {
 		ID: "20250308134840_create_transactions",
 		Migrate: func(tx *gorm.DB) error {
 			type Transaction struct {
-				ID                    uint       `gorm:"primaryKey"`
-				WalletID              uint       `gorm:"not null;index"`
-				Amount                float64    `gorm:"type:decimal(20,2);not null"`
-				ReceiverBank          string     `gorm:"size:100;not null"`
-				ReceiverAccountNumber string     `gorm:"size:100;not null"`
-				Status                int8       `gorm:"type:tinyint;not null"`
-				ReferenceID           string     `gorm:"size:100;unique;not null"`
-				CreatedAt             time.Time  `gorm:"autoCreateTime;index"`
-				CompletedAt           *time.Time `gorm:"autoCreateTime;index"`
-				UpdatedAt             time.Time  `gorm:"autoCreateTime"`
+				ID                    uint    `gorm:"primaryKey"`
+				WalletID              uint    `gorm:"not null;index"`
+				Amount                float64 `gorm:"type:decimal(20,2);not null"`
+				ReceiverBank          string  `gorm:"size:100;not null"`
+				ReceiverAccountNumber string  `gorm:"size:100;not null"`
+				Status                int8    `gorm:"type:tinyint;not null"`
+				ReferenceID           string  `gorm:"size:100;unique;not null"`
+				CreatedAt             uint    `gorm:"autoCreateTime;index"`
+				CompletedAt           *uint   `gorm:"autoCreateTime;index"`
+				UpdatedAt             uint    `gorm:"autoCreateTime"`
 			}
 
 			return tx.AutoMigrate(&Transaction{})
@@ -103,16 +101,16 @@ func init() {
 		ID: "20250308203422_create_balance_histories",
 		Migrate: func(tx *gorm.DB) error {
 			type BalanceHistory struct {
-				ID              uint      `gorm:"primaryKey;autoIncrement"`
-				WalletID        uint      `gorm:"index"`
-				TransactionID   uint      `gorm:"not null"`
-				TransactionType int       `gorm:"not null"`
-				OriginAmount    float64   `gorm:"default:null"`
-				Amount          float64   `gorm:"not null"`
-				OperationType   int       `gorm:"not null"`
-				FinalAmount     float64   `gorm:"default:null"`
-				Notes           string    `gorm:"type:text"`
-				CreatedAt       time.Time `gorm:"autoCreateTime"`
+				ID              uint    `gorm:"primaryKey;autoIncrement"`
+				WalletID        uint    `gorm:"index"`
+				TransactionID   uint    `gorm:"not null"`
+				TransactionType int     `gorm:"not null"`
+				OriginAmount    float64 `gorm:"default:null"`
+				Amount          float64 `gorm:"not null"`
+				OperationType   int     `gorm:"not null"`
+				FinalAmount     float64 `gorm:"default:null"`
+				Notes           string  `gorm:"type:text"`
+				CreatedAt       uint    `gorm:"autoCreateTime"`
 			}
 
 			return tx.AutoMigrate(&BalanceHistory{})
