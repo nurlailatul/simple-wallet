@@ -67,7 +67,7 @@ func (h *HTTPHandler) createDisbursement(c *gin.Context) {
 		return
 	}
 
-	existingTrx := h.transactionService.GetByReferenceID(ctx, request.ReferenceID.String())
+	existingTrx := h.transactionService.GetByReferenceID(ctx, request.ReferenceID)
 	if existingTrx != nil {
 		response.SendError(c, response.ErrRequestUnprocessed, errors.New("reference_id exist"))
 		return
@@ -79,7 +79,7 @@ func (h *HTTPHandler) createDisbursement(c *gin.Context) {
 		Amount:                request.Amount,
 		ReceiverBank:          request.ReceiverBank,
 		ReceiverAccountNumber: request.ReceiverAccountNumber,
-		ReferenceID:           request.ReferenceID.String(),
+		ReferenceID:           request.ReferenceID,
 	}
 
 	err := h.transactionService.DeductBalance(ctx, req)

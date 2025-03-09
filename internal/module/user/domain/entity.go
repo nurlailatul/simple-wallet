@@ -1,7 +1,7 @@
 package domain
 
 type UserEntity struct {
-	ID        uint   `json:"id" db:"id"`
+	ID        int64  `json:"id" db:"id"`
 	Phone     string `json:"phone" db:"phone"`
 	Email     string `json:"email" db:"email"`
 	Name      string `json:"name" db:"name"`
