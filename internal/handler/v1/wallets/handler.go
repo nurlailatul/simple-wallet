@@ -83,11 +83,13 @@ func (h *HTTPHandler) createDisbursement(c *gin.Context) {
 		User:                  user,
 	}
 
-	err := h.transactionService.DeductBalance(ctx, req)
+	data, err := h.transactionService.DeductBalance(ctx, req)
 	if err != nil {
 		response.SendError(c, response.ErrRequestUnprocessed, err)
 		return
 	}
 
-	response.SendSuccess(c, nil, nil)
+	responseData := responseMapping(*data, request)
+
+	response.SendSuccess(c, responseData, nil)
 }

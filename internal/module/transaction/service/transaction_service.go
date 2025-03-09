@@ -41,23 +41,20 @@ func (s *TransactionService) GetByReferenceID(ctx context.Context, referenceID s
 	return s.repo.GetByReferenceID(ctx, referenceID)
 }
 
-func (s *TransactionService) DeductBalance(ctx context.Context, request domain.DeductBalanceRequest) error {
+func (s *TransactionService) DeductBalance(ctx context.Context, request domain.DeductBalanceRequest) (data *domain.DeductBalanceResponse, err error) {
 	logf := fmt.Sprintf(logFormat, "DeductBalance", request.UserID)
-	var (
-		err     error
-		message string
-	)
+	message := ""
 
 	if request.User == nil {
 		request.User = s.userRepo.GetByID(ctx, request.UserID)
 	}
 
 	if request.User == nil {
-		return errors.New("user not found")
+		return nil, errors.New("user not found")
 	}
 
 	if request.User.Status != userDomain.StatusActive {
-		return errors.New("user not active")
+		return nil, errors.New("user not active")
 	}
 
 	tx := s.dbWrapper.Begin()
@@ -70,11 +67,11 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 	walletRepo := walletRepository.NewWalletRepository(tx)
 	wallet := walletRepo.GetByUserIDForLocking(ctx, request.WalletID)
 	if wallet == nil {
-		return errors.New("record not found")
+		return nil, errors.New("record not found")
 	}
 
 	if wallet.Balance < request.Amount {
-		return errors.New("insufficient balance")
+		return nil, errors.New("insufficient balance")
 	}
 
 	// Deduct balance and update wallet
@@ -87,7 +84,7 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 		tx.Rollback()
 		message = "error deduct wallet balance"
 		log.Errorf("%v %v: %v", logf, message, err.Error())
-		return errors.New(message)
+		return nil, errors.New(message)
 	}
 
 	trx := domain.TransactionEntity{
@@ -105,7 +102,7 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 		tx.Rollback()
 		message = "error create deduct transaction"
 		log.Errorf("%v %v: %v", logf, message, err.Error())
-		return errors.New(message)
+		return nil, errors.New(message)
 	}
 
 	history := balanceHistoryDomain.BalanceHistoryEntity{
@@ -123,18 +120,25 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 
 		message = "error create balance history"
 		log.Errorf("%v %v: %v", logf, message, err.Error())
-		return errors.New(message)
+		return nil, errors.New(message)
 	}
 
 	err = tx.Commit().Error
 	if err != nil {
 		message = "error commit transaction"
 		log.Errorf("%v %v: %v", logf, message, err.Error())
-		return errors.New(message)
+		return nil, errors.New(message)
 	}
 
 	message = "Success deduct balance"
 	log.Infof("%v %v: %v", logf, message, "")
 
-	return nil
+	data = &domain.DeductBalanceResponse{
+		WalletID:   request.WalletID,
+		NewBalance: wallet.Balance,
+		Status:     trx.Status,
+		CreatedAt:  trx.CreatedAt,
+	}
+
+	return data, nil
 }

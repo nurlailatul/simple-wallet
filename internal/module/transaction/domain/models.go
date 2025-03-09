@@ -5,11 +5,18 @@ import (
 )
 
 type DeductBalanceRequest struct {
-	UserID                int64   `json:"user_id"`
-	WalletID              int64   `json:"wallet_id"`
-	Amount                float64 `json:"amount"`
-	ReceiverBank          string  `json:"receiver_bank"`
-	ReceiverAccountNumber string  `json:"receiver_account_number"`
-	ReferenceID           string  `json:"reference_id"`
+	UserID                int64
+	WalletID              int64
+	Amount                float64
+	ReceiverBank          string
+	ReceiverAccountNumber string
+	ReferenceID           string
 	User                  *userDomain.UserEntity
+}
+
+type DeductBalanceResponse struct {
+	WalletID   int64
+	NewBalance float64
+	Status     Status
+	CreatedAt  uint
 }

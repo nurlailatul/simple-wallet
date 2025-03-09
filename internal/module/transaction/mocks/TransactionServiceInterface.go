@@ -15,21 +15,33 @@ type TransactionServiceInterface struct {
 }
 
 // DeductBalance provides a mock function with given fields: ctx, request
-func (_m *TransactionServiceInterface) DeductBalance(ctx context.Context, request domain.DeductBalanceRequest) error {
+func (_m *TransactionServiceInterface) DeductBalance(ctx context.Context, request domain.DeductBalanceRequest) (*domain.DeductBalanceResponse, error) {
 	ret := _m.Called(ctx, request)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeductBalance")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, domain.DeductBalanceRequest) error); ok {
+	var r0 *domain.DeductBalanceResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, domain.DeductBalanceRequest) (*domain.DeductBalanceResponse, error)); ok {
+		return rf(ctx, request)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, domain.DeductBalanceRequest) *domain.DeductBalanceResponse); ok {
 		r0 = rf(ctx, request)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.DeductBalanceResponse)
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, domain.DeductBalanceRequest) error); ok {
+		r1 = rf(ctx, request)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetByReferenceID provides a mock function with given fields: ctx, referenceID

@@ -78,7 +78,12 @@ func (s *WalletTestSuite) TestWalletHandler_createWallet() {
 				s.userService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
 				s.walletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
 				s.transactionService.On("GetByReferenceID", mock.Anything, requestBody.ReferenceID).Return(nil)
-				s.transactionService.On("DeductBalance", mock.Anything, mock.Anything).Return(nil)
+				s.transactionService.On("DeductBalance", mock.Anything, mock.Anything).Return(&transactionDomain.DeductBalanceResponse{
+					WalletID:   walletID,
+					NewBalance: 15000,
+					Status:     0,
+					CreatedAt:  1282312835,
+				}, nil)
 
 				return fields{
 					userService:        s.userService,
@@ -101,7 +106,7 @@ func (s *WalletTestSuite) TestWalletHandler_createWallet() {
 				s.userService.On("GetByID", mock.Anything, userID).Return(&userDomain.UserEntity{ID: userID})
 				s.walletService.On("GetByUserID", mock.Anything, userID).Return(&walletDomain.WalletEntity{ID: walletID})
 				s.transactionService.On("GetByReferenceID", mock.Anything, requestBody.ReferenceID).Return(nil)
-				s.transactionService.On("DeductBalance", mock.Anything, mock.Anything).Return(errors.New("error deduct wallet balance"))
+				s.transactionService.On("DeductBalance", mock.Anything, mock.Anything).Return(nil, errors.New("error deduct wallet balance"))
 
 				return fields{
 					userService:        s.userService,
