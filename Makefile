@@ -3,7 +3,7 @@
 # Variables
 APP_NAME=domper #dompet-paper
 
-run: build
+run: deps build
 	@echo "Starting the app..."
 	@./$(APP_NAME) start
 
