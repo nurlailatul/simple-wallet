@@ -8,6 +8,8 @@ import (
 	balanceHistoryRepository "simple-wallet/internal/module/balance_history/repository"
 	"simple-wallet/internal/module/transaction/domain"
 	"simple-wallet/internal/module/transaction/repository"
+	userDomain "simple-wallet/internal/module/user/domain"
+	userRepository "simple-wallet/internal/module/user/repository"
 	walletRepository "simple-wallet/internal/module/wallet/repository"
 	"simple-wallet/pkg/db"
 	"time"
@@ -19,16 +21,19 @@ var logFormat = "[TransactionService][%v][UserID:%v]"
 
 type TransactionService struct {
 	repo      repository.TransactionRepositoryInterface
+	userRepo  userRepository.UserRepositoryInterface
 	dbWrapper *db.GormDBWrapper
 }
 
 func NewTransactionService(
 	repo repository.TransactionRepositoryInterface,
+	userRepo userRepository.UserRepositoryInterface,
 	dbWrapper *db.GormDBWrapper,
 ) TransactionServiceInterface {
 	return &TransactionService{
 		dbWrapper: dbWrapper,
 		repo:      repo,
+		userRepo:  userRepo,
 	}
 }
 
@@ -42,6 +47,18 @@ func (s *TransactionService) DeductBalance(ctx context.Context, request domain.D
 		err     error
 		message string
 	)
+
+	if request.User == nil {
+		request.User = s.userRepo.GetByID(ctx, request.UserID)
+	}
+
+	if request.User == nil {
+		return errors.New("user not found")
+	}
+
+	if request.User.Status != userDomain.StatusActive {
+		return errors.New("user not active")
+	}
 
 	tx := s.dbWrapper.Begin()
 	defer func() {

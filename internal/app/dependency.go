@@ -41,6 +41,7 @@ func (a *Application) SetupDependencies(ctx context.Context, cfg *config.Configu
 	walletService := walletService.NewWalletService(walletRepo)
 	transactionService := transactionService.NewTransactionService(
 		transactionRepo,
+		userRepo,
 		gormWrapper,
 	)
 

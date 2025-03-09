@@ -80,6 +80,7 @@ func (h *HTTPHandler) createDisbursement(c *gin.Context) {
 		ReceiverBank:          request.ReceiverBank,
 		ReceiverAccountNumber: request.ReceiverAccountNumber,
 		ReferenceID:           request.ReferenceID,
+		User:                  user,
 	}
 
 	err := h.transactionService.DeductBalance(ctx, req)
