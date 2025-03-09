@@ -53,7 +53,7 @@ func (s *WalletServiceSuite) TestWalletService_GetByCompanyId() {
 		want   *domain.WalletEntity
 	}{
 		{
-			name: "Success",
+			name: "success",
 			fields: func(t *testing.T) fields {
 				s := new(WalletServiceSuite).SetupSuite(t)
 				s.repo.On("GetByUserID", mock.Anything, mock.Anything).Return(&dummyEntity, nil)

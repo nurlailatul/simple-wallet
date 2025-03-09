@@ -15,14 +15,14 @@ func init() {
 		ID: "20250308170340_seed_users_data",
 		Migrate: func(tx *gorm.DB) error {
 			users := []userDomain.UserEntity{
-				{ID: 1, Phone: "+6281234567890", Name: "Nur Lailatul", Email: "nurlailatul@gmail.com", CreatedAt: time.Now()},
-				{ID: 2, Phone: "+6281234567891", Name: "Admin Paper ID", Email: "admin@gmail.com", CreatedAt: time.Now()},
+				{ID: 1, Phone: "+6281234567890", Name: "Nur Lailatul", Email: "nurlailatul@gmail.com", CreatedAt: uint(time.Now().Unix())},
+				{ID: 2, Phone: "+6281234567891", Name: "Admin Paper ID", Email: "admin@gmail.com", CreatedAt: uint(time.Now().Unix())},
 			}
 			tx.Create(&users)
 
 			wallets := []walletDomain.WalletEntity{
-				{ID: 1, UserID: 1, Balance: 10000.00, CreatedAt: time.Now()},
-				{ID: 2, UserID: 2, Balance: 5000.00, CreatedAt: time.Now()},
+				{ID: 1, UserID: 1, Balance: 10000.00, CreatedAt: uint(time.Now().Unix())},
+				{ID: 2, UserID: 2, Balance: 5000.00, CreatedAt: uint(time.Now().Unix())},
 			}
 			tx.Create(&wallets)
 
