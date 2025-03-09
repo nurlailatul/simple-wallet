@@ -29,28 +29,30 @@ Maintainer : @nurlailatul
     cp config.yml.tmpl config.yml
     ```
 
-6. Migrate database
+6. Load swagger
+    ```
+    make swagger
+    ```
+
+7. Migrate database
     ```
     make migrate
     ```
 
 ### Run the App
 
-1. Load swagger
-    ```
-    make swagger
-    ```
-
-2. Compile and Run
+1. Compile and Run
     ```sh
     make run
     ```
 
-3. Health check API http://localhost:8081/ping
+2. Health check API http://localhost:8081/ping
 
-4. Open Swagger in Browser http://localhost:8081/ping/swagger/index.html
+3. Open Swagger in Browser http://localhost:8081/ping/swagger/index.html
+   You can use browser extension to modify request header, to add `x-api-key`.
+   In chrome, you can use ModHeader https://modheader.com/?ref=me&product=ModHeader&version=7.0.7&browser=chrome
 
-5. Test di API in Swagger
+4. Test di API in Swagger
 
 ## Other make commands
 
